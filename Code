@@ -1,0 +1,146 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <vector>
+using namespace std;
+// cryptographic protection software tool
+struct CPST {
+	string Author;
+	int Num_versions;
+	string Num_algorithms;
+	bool License;
+};
+
+//Печать массив CPST
+void print_CPST(ostream& out, vector<CPST>& CPSTs)
+{
+	for (auto& pos:CPSTs)
+	{
+		out << pos.Author << " " << pos.Num_versions << " " << pos.Num_algorithms << " " << pos.License << endl;
+	}
+}
+
+long long get_file_size(const string& file_name)
+{
+	ifstream fin(file_name, ios::binary | ios::ate);
+	if (!fin.is_open()) {
+		cout << "Error opening file" << endl;
+		return -1;
+	}
+	long long size = fin.tellg();
+	fin.close();
+	return size;
+}
+
+
+void save_to_file(vector<CPST>& CPSTs, const string& file_name, const string& open_mode)
+{
+	int n = CPSTs.size();
+	if (open_mode == "text")
+	{
+		ofstream foutt(file_name);
+		foutt << n << endl;
+		for (auto& pos : CPSTs) {
+			foutt << pos.Author << endl << pos.Num_algorithms << endl;
+			foutt << pos.Num_versions << endl << pos.License << endl;
+		}
+		foutt.close();
+	}
+	else if (open_mode == "binary")
+	{
+		ofstream foutb(file_name, ios::binary);
+		foutb.write((char*)&n, sizeof(n));
+		for (auto& pos : CPSTs) {
+			foutb << pos.Author << ends << pos.Num_algorithms << ends;
+			foutb.write((char*)&pos.Num_versions, sizeof(pos.Num_versions));
+			foutb.write((char*)&pos.License, sizeof(pos.License));
+		}
+		foutb.close();
+	}
+
+}
+
+void load_from_file(vector<CPST>& CPSTs, const string& file_name, const string& open_mode)
+{
+	int n;
+	if (open_mode == "text") {
+		ifstream fint(file_name);
+		if (!fint.is_open()) {
+			cout << "Error opening file" << endl;
+			return;
+		}
+		fint >> n;
+		fint.ignore();
+		CPSTs.resize(n);
+		for (auto& pos : CPSTs) {
+			getline(fint, pos.Author);
+			getline(fint, pos.Num_algorithms);
+			fint >> pos.Num_versions;
+			fint >> pos.License;
+			fint.ignore();
+		}
+		fint.close();
+	}
+	else if (open_mode == "binary") {
+		ifstream finb(file_name, ios::binary);
+		finb.read((char*)&n, sizeof(n));
+		CPSTs.resize(n);
+		for (auto& pos : CPSTs) {
+			getline(finb, pos.Author, '\0');
+			getline(finb, pos.Num_algorithms, '\0');
+			finb.read((char*)&pos.Num_versions, sizeof(pos.Num_versions));
+			finb.read((char*)&pos.License, sizeof(pos.License));
+		}
+		finb.close();
+	}
+}
+
+int main(int argc, const char* argv[])
+{
+	if (argc != 4) // проверка количества аргументов
+	{
+		cout << "Incorrect number of arguments" << endl;
+		return 1;
+	}
+
+	const string mode(argv[1]); //Режим работы (запись или чтение)
+	const string open_mode(argv[2]); //Режим открытия файла (текстовый или двоичный)
+	const string file_name(argv[3]); //имя файла
+	int n; //Переменная, задающая чило элементов массива
+	vector <CPST> CPSTs; //массив структур
+
+	if (mode == "write") //Запись в файл
+	{
+		cout << "Enter the number of elements: ";
+		cin >> n;
+		cin.ignore();
+		CPSTs.resize(n);
+		for (int i = 0; i < n; i++)
+		{
+			cout << "Enter Author: ";
+			getline(cin, CPSTs[i].Author);
+			cout << "Enter Num_algorithms: ";
+			getline(cin, CPSTs[i].Num_algorithms);
+			cout << "Enter Num_versions: ";
+			cin >> CPSTs[i].Num_versions;
+			cout << "Enter License (1 for true, 0 for false): ";
+			cin >> CPSTs[i].License;
+			cin.ignore();
+		}
+		save_to_file(CPSTs, file_name, open_mode);
+	}
+	else if (mode == "read") //Чтение из файла
+	{
+		load_from_file(CPSTs, file_name, open_mode);
+		print_CPST(cout, CPSTs);
+	}
+	else
+	{
+		cout << "Invalid mode" << endl;
+		return 1;
+	}
+
+	cout << "File size: " << get_file_size(file_name) << " bytes" << endl;
+
+	return 0;
+}
