@@ -109,7 +109,7 @@ int main(int argc, const char* argv[])
 	int n; //Переменная, задающая чило элементов массива
 	vector <CPST> CPSTs; //массив структур
 
-	if (mode == "write") //Запись в файл
+	if (mode == "write") //Запись в файл с интимками
 	{
 		cout << "Enter the number of elements: ";
 		cin >> n;
